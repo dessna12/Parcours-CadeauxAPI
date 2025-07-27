@@ -7,7 +7,7 @@ const giftSchema = require('../schemas/gift.schema');
 router.get('/', async (req, res, next) => {
     try {
         //TODO : Ecrire la requête dans les '' qui permet de récuperer tous les cadeaux
-        const [gifts] = await db.query('');
+        const [gifts] = await db.query('SELECT * FROM ?', ["gifts"]);
         res.json(gifts);
     } catch (err) {
         next(err);
@@ -23,7 +23,7 @@ router.post('/', async (req, res, next) => {
         const { title, description, price, reserved = false } = value;
         //TODO : Ecrire la requête dans les '' qui permet d'ajouter un cadeau sur SQL
         const [result] = await db.query(
-            '',
+            'INSERT INTO gifts (title, description, price, reversed) VALUES (?, ?, ?, ?)',
             [title, description, price, reserved]
         );
         res.status(201).json({ id: result.insertId, ...value });
@@ -37,9 +37,10 @@ router.patch('/:id', async (req, res, next) => {
     try {
         const { error, value } = giftSchema.validate(req.body, { presence: 'optional' });
         if (error) return res.status(400).json({ error: error.details[0].message });
+        console.log(value);
 
                 //TODO : Ecrire la requête dans les '' qui permet de modifier un cadeau sur SQL
-        const [result] = await db.query('', [value, req.params.id]);
+        const [result] = await db.query('UPDATE gifts SET title = ?, description = ?, price = ?, reserved = ? WHERE id = ?', [value.title, value.description, value.price, value.reserved, req.params.id]);
         if (result.affectedRows === 0) return res.status(404).json({ error: 'Cadeau non trouvé' });
         res.json({ message: 'Cadeau mis à jour' });
     } catch (err) {
